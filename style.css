@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #575656;
+    background-color: lightgray;
+}
+
+.theme {
+    display: flex;
+    gap: 5px;
+}
+
+.greeting_block {
+    background-color: #9c7047;
+    color: yellow;
+    padding: 20px;
+    border-radius: 20px;
+}
+.cards {
+    display: flex;
+    gap: 10px;
+    color: #fff;
+    justify-content: space-around;
+}
+
+.card {
+    padding: 10px;
+    background-color: lime;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.card:hover {
+    background-color: rgb(26, 228, 26);
+}
+
+.images_block {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.images_block img {
+    border-radius: 20px;
+}
