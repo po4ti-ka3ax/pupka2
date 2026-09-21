@@ -3,6 +3,10 @@ body {
     color: #575656;
     background-color: lightgray;
 }
+.items_block {
+    display: flex; 
+    justify-content: space-between;
+}
 
 .theme {
     display: flex;
