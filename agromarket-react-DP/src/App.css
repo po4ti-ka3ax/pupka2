@@ -182,3 +182,8 @@
     border-right-color: var(--border);
   }
 }
+
+li {
+  list-style: none;
+}
+.contact-form input:user-invalid { border-color: #c62828; }

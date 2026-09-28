@@ -1,9 +1,8 @@
-function ProductCard({ product, onAdd }) {
+function ProductCard({ product, onAdd, featured }) {
     
   return (
-    <article className="card">
-      {/* ЗАДАНИЕ: выведите картинку товара через <img> */}
-      {/* используйте product.image и product.name (для alt) */}
+    <article className={featured ? 'card card--featured' : 'card'}>
+      {featured && <span className="badge">Товар недели</span>}
       <img src={product.image} alt={product.name} />
       <h3>{product.name}</h3>
       
