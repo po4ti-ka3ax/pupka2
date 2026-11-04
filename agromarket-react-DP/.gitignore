@@ -1,6 +1,11 @@
+# Environment variables
+.env
+.env.development
+.env.*.local
+
+
 # Logs
 
-.env.development
 
 logs
 *.log
