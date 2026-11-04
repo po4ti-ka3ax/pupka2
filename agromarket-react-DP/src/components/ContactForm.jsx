@@ -1,5 +1,6 @@
+import { API_URL } from "../api.js";
+
 function ContactForm() {
-  const API_URL = "http://localhost:3000/api";
   async function handleSubmit(e) {
     e.preventDefault();
     const form = e.target; // не перезагружать страницу
