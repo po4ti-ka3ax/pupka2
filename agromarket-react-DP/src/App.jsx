@@ -39,7 +39,7 @@ function App() {
   const [cartCount, setCartCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const API_URL = "http://localhost:3000/api";
+  // const API_URL = "http://localhost:3000/api";
 
   useEffect(() => {
     async function loadProducts() {
