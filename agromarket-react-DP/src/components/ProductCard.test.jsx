@@ -4,9 +4,10 @@ import ProductCard from './ProductCard';
 
 describe('ProductCard', () => {
   const product = {
-    title: 'Мёд гречишный',
+    name: 'Мёд гречишный',
     price: 3500,
     category: 'Мёд',
+    image: 'honey.jpg',
   };
 
   test('показывает название и цену', () => {
@@ -32,7 +33,6 @@ describe('ProductCard', () => {
     
     render(<ProductCard product={outOfStockProduct} onAdd={onAdd} />);
 
-    // Если компонент выводит статус или блокирует кнопку при stock: 0
     const button = screen.getByRole('button', { name: /в корзину|в заявку|добавить/i });
     expect(button).toBeDisabled();
   });
