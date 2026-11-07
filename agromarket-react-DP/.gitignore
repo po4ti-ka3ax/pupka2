@@ -6,6 +6,9 @@ git status
 
 # Logs
 
+test-results/
+playwright-report/
+coverage/
 
 logs
 *.log
