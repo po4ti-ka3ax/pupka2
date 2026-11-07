@@ -1,9 +1,9 @@
 name: E2E (production)
 
 on:
-  workflow_dispatch:           # кнопка Run workflow
+  workflow_dispatch:
   schedule:
-    - cron: '0 4 * * *'        # ежедневно 04:00 UTC (09:00 в Астане)
+    - cron: '0 4 * * *'     # ежедневно 04:00 UTC (09:00 в Астане)
 
 jobs:
   e2e:
