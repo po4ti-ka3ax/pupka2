@@ -1,0 +1,3 @@
+- run: npm ci
+      - run: npm test          # ← новое: компонентные тесты
+      - run: npm run build
