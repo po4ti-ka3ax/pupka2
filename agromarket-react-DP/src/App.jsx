@@ -1,55 +1,42 @@
-import ProductCard from "./components/ProductCard";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Route, Routes, useLocation } from "react-router-dom";
 import "./App.css";
+import ProductCard from "./components/ProductCard";
 import LoginForm from "./components/LoginForm.jsx";
-import AddProductForm from "./components/AddProductForm.jsx"; // создадим в шаге 6.4
-import { API_URL, apiFetch } from "./api.js";
-
+import AddProductForm from "./components/AddProductForm.jsx";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ContactForm from "./components/ContactForm";
+import ProductPage from "./pages/ProductPage.jsx";
+import { API_URL, apiFetch } from "./api.js";
+import { useAuth } from "./context/AuthContext.jsx";
+
+// Кто может добавлять и удалять товары (права всё равно проверяет сервер)
+const PRODUCT_MANAGERS = ["farmer", "admin"];
 
 function App() {
-  const testProduct = {
-    id: 1,
-    name: "Тест",
-    price: 100,
-    image: "https://placehold.co/300x200",
-  };
-
-  let hasError = false;
-
-  const [user, setUser] = useState(() =>
-    JSON.parse(localStorage.getItem("user") || "null"),
-  );
-
-  function handleLogin(user, token) {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
-  }
-
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-  }
+  // Пользователь, вход и выход живут в AuthProvider (src/context/AuthContext.jsx)
+  const { user, logout } = useAuth();
+  const { pathname } = useLocation();
+  const canManage = PRODUCT_MANAGERS.includes(user?.role);
 
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-
-  // const API_URL = "http://localhost:3000/api";
 
   useEffect(() => {
     async function loadProducts() {
       try {
         const response = await fetch(`${API_URL}/products`);
-        const result = await response.json();
-        setProducts(result);
-        renderProducts(products);
-      } catch (error) {
-        hasError = !hasError;
+        if (!response.ok) throw new Error(`Ошибка ${response.status}`);
+        const data = await response.json();
+        setProducts(Array.isArray(data) ? data : data.items || data.products || []);
+      } catch {
+        setError("Не удалось загрузить товары");
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -57,22 +44,67 @@ function App() {
   }, []);
 
   const handleAddToCart = () => {
-    setCartCount(cartCount + 1);
+    setCartCount((count) => count + 1);
   };
+
+  async function handleDelete(product) {
+    try {
+      await apiFetch(`/products/${product.id}`, { method: "DELETE" });
+      setProducts((list) => list.filter((p) => p.id !== product.id));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  useEffect(() => {
-    if (!localStorage.getItem("token")) return; // не входили — проверять нечего
-    apiFetch('/auth/me')
-      .then((user) => setUser(user))
-      .catch(() => {});
-    // ЗАДАНИЕ: вызовите apiFetch('/auth/me') и положите результат в setUser.
-    // ЗАДАНИЕ: ошибку перехватите пустым .catch(() => {}) —
-    // ЗАДАНИЕ: при 401 apiFetch сам выполнит выход
-  }, []);
+  const home = (
+    <>
+      {canManage && (
+        <AddProductForm onAdded={(p) => setProducts((list) => [...list, p])} />
+      )}
+
+      <section id="catalog" className="catalog">
+        <div className="catalog-toolbar">
+          <h2>Каталог</h2>
+          <p>Товаров в корзине: {cartCount}</p>
+          <input
+            type="search"
+            placeholder="Поиск товара..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        {loading && <p>Загрузка товаров...</p>}
+        {error && <p role="alert" className="error">{error}</p>}
+        {!loading && !error && products.length === 0 && <p>Товаров пока нет</p>}
+        <div className="product-grid">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              onAdd={handleAddToCart}
+              onDelete={canManage ? handleDelete : undefined}
+              key={product.id}
+              product={product}
+              featured={product.id === "1"}
+            />
+          ))}
+        </div>
+      </section>
+      <aside id="delivery" className="sidebar">
+        <h3>Доставка</h3>
+        <ul>
+          <li>Астана — на следующий день</li>
+          <li>Акмолинская область — 2–3 дня</li>
+          <li>Бесплатно от 20 000 тг</li>
+        </ul>
+      </aside>
+      <section id="contact">
+        <ContactForm />
+      </section>
+    </>
+  );
 
   return (
     <>
@@ -83,53 +115,24 @@ function App() {
               <span>
                 Вы вошли как <b>{user.name}</b> ({user.role})
               </span>
-              <button onClick={handleLogout}>Выйти</button>
+              <button onClick={logout}>Выйти</button>
             </>
           ) : (
-            <LoginForm onLogin={handleLogin} />
+            // /register сразу открывает форму регистрации, остальные адреса — вход
+            <LoginForm
+              key={pathname === "/register" ? "register" : "login"}
+              initialMode={pathname === "/register" ? "register" : "login"}
+            />
           )}
         </div>
 
-        <Header />
+        <Header cartCount={cartCount} />
 
         <main className="page">
-          {user?.role === "admin" && (
-            <AddProductForm onAdded={(p) => setProducts([...products, p])} />
-          )}
-
-          <section id="catalog" className="catalog">
-            <div className="catalog-toolbar">
-              <h2>Каталог</h2>
-              <p>Товаров в корзине: {cartCount}</p>
-              <input
-                type="search"
-                placeholder="Поиск товара..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="product-grid">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  onAdd={handleAddToCart}
-                  key={product.id}
-                  product={product}
-                  featured={product.id === "1"}
-                />
-              ))}
-            </div>
-          </section>
-          <aside id="delivery" className="sidebar">
-            <h3>Доставка</h3>
-            <ul>
-              <li>Астана — на следующий день</li>
-              <li>Акмолинская область — 2–3 дня</li>
-              <li>Бесплатно от 20 000 тг</li>
-            </ul>
-          </aside>
-          <section id="contact">
-            <ContactForm />
-          </section>
+          <Routes>
+            <Route path="/products/:id" element={<ProductPage />} />
+            <Route path="*" element={home} />
+          </Routes>
         </main>
       </div>
       <Footer />

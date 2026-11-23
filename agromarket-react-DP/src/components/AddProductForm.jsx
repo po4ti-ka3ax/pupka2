@@ -1,44 +1,57 @@
 import { useState } from 'react';
-import { apiFetch } from '../api.js';
- 
+import { apiFetch, errorMessages } from '../api.js';
+
 export default function AddProductForm({ onAdded }) {
-  const [error, setError] = useState('');
- 
+  const [errors, setErrors] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
-    const form = e.target;
+    setErrors([]);
+    setLoading(true);
+    const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form));
- 
+
     try {
-      // ЗАДАНИЕ: отправьте POST /products через apiFetch.
-      // ЗАДАНИЕ: тело — data, но price — числом:
-      // ЗАДАНИЕ: { ...data, price: Number(data.price) }
-      const result = await apiFetch(`/products`, {
+      const product = await apiFetch('/products', {
         method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          price: Number(data.price),
-        }),
+        body: JSON.stringify({ ...data, price: Number(data.price) }),
       });
-      const product = result;
- 
-      onAdded(product);      // сообщаем App о новом товаре
+      onAdded?.(product); // сообщаем App о новом товаре
       form.reset();
     } catch (err) {
-      setError(err.message);
+      // 400 от сервера (zod): «Цена должна быть больше 0» и т.п. — из details
+      setErrors(errorMessages(err));
+    } finally {
+      setLoading(false);
     }
   }
- 
+
   return (
     <form className="admin-form" onSubmit={handleSubmit}>
       <h3>Новый товар</h3>
-      <input name="name" placeholder="Название" required />
-      <input name="category" placeholder="Категория" />
-      <input name="price" type="number" min="0" placeholder="Цена, ₸" required />
-      <input name="unit" placeholder="Единица (кг, л)" defaultValue="кг" />
-      {error && <p className="error">{error}</p>}
-      <button type="submit">Добавить</button>
+
+      <label htmlFor="product-name">Название</label>
+      <input id="product-name" name="name" placeholder="Название" required />
+
+      <label htmlFor="product-category">Категория</label>
+      <input id="product-category" name="category" placeholder="Категория" />
+
+      {/* min="1" — первая линия защиты в браузере; сервер всё равно проверяет сам */}
+      <label htmlFor="product-price">Цена, ₸</label>
+      <input id="product-price" name="price" type="number" min="1" placeholder="Цена, ₸" required />
+
+      <label htmlFor="product-unit">Единица</label>
+      <input id="product-unit" name="unit" placeholder="Единица (кг, л)" defaultValue="кг" />
+
+      {errors.length > 0 && (
+        <div role="alert" className="error">
+          {errors.map((message) => (
+            <p key={message}>{message}</p>
+          ))}
+        </div>
+      )}
+      <button type="submit" disabled={loading}>Добавить</button>
     </form>
   );
 }

@@ -2,12 +2,13 @@
 .env
 .env.development
 .env.*.local
-git status
 
 # Logs
 
 test-results/
 playwright-report/
+playwright/.cache/
+.env.e2e
 coverage/
 
 logs

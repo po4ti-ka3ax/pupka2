@@ -20,7 +20,7 @@ function ContactForm() {
       }
       alert(`Заявка №${result.id} принята!`);
       form.reset();
-    } catch (err) {
+    } catch {
       // сервер выключен или недоступен
       alert("Сервер недоступен. Запущен ли agromarket-server?");
     }
