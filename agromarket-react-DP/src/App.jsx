@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import LoginForm from "./components/LoginForm.jsx";
 import AddProductForm from "./components/AddProductForm.jsx"; // создадим в шаге 6.4
-import { API_URL, apiFetch } from "./api.js";
+import { API_URL } from "./api.js";
+import { useAuth } from "./context/AuthContext.jsx";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -19,21 +20,8 @@ function App() {
 
   let hasError = false;
 
-  const [user, setUser] = useState(() =>
-    JSON.parse(localStorage.getItem("user") || "null"),
-  );
-
-  function handleLogin(user, token) {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
-  }
-
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-  }
+  // Пользователь, вход и выход теперь живут в AuthProvider (src/context/AuthContext.jsx)
+  const { user, logout } = useAuth();
 
   const [products, setProducts] = useState([]);
   const [cartCount, setCartCount] = useState(0);
@@ -64,15 +52,6 @@ function App() {
     product.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  useEffect(() => {
-    if (!localStorage.getItem("token")) return; // не входили — проверять нечего
-    apiFetch('/auth/me')
-      .then((user) => setUser(user))
-      .catch(() => {});
-    // ЗАДАНИЕ: вызовите apiFetch('/auth/me') и положите результат в setUser.
-    // ЗАДАНИЕ: ошибку перехватите пустым .catch(() => {}) —
-    // ЗАДАНИЕ: при 401 apiFetch сам выполнит выход
-  }, []);
 
   return (
     <>
@@ -83,10 +62,10 @@ function App() {
               <span>
                 Вы вошли как <b>{user.name}</b> ({user.role})
               </span>
-              <button onClick={handleLogout}>Выйти</button>
+              <button onClick={logout}>Выйти</button>
             </>
           ) : (
-            <LoginForm onLogin={handleLogin} />
+            <LoginForm />
           )}
         </div>
 

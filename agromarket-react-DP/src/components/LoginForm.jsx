@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { apiFetch } from "../api.js";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 export default function LoginForm({ onLogin }) {
+  // Внутри <AuthProvider> вход сохраняется в контекст; onLogin — для тестов/переопределения
+  const auth = useContext(AuthContext);
+  const handleLogin = onLogin ?? auth?.login;
+
   const [mode, setMode] = useState("login"); // 'login' или 'register'
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +23,7 @@ export default function LoginForm({ onLogin }) {
         method: "POST",
         body: JSON.stringify(data),
       });
-      onLogin(result.user, result.token);
+      handleLogin?.(result.user, result.token);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -39,7 +44,7 @@ export default function LoginForm({ onLogin }) {
         </>
       )}
 
-      <label htmlFor="email">Email</label>
+      <label htmlFor="email">E-mail</label>
       <input
         id="email"
         name="email"

@@ -1,8 +1,25 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LoginForm from './LoginForm';
+import { renderWithProviders } from '../test/utils';
 
 describe('LoginForm', () => {
+
+  test('поля связаны с подписями', () => {
+    renderWithProviders(<LoginForm />);
+    expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/пароль/i)).toHaveAttribute('type', 'password');
+  });
+
+  test('пользователь может ввести данные', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<LoginForm />);
+
+    await user.type(screen.getByLabelText(/e-mail/i), 'farmer@agro.kz');
+    expect(screen.getByLabelText(/e-mail/i)).toHaveValue('farmer@agro.kz');
+  });
+
+
   test('отправляет введённые e-mail и пароль через fetch', async () => {
     const user = userEvent.setup();
     
