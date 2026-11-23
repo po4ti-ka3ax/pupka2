@@ -1,30 +1,22 @@
 import { useEffect, useState } from 'react';
 import ProductCard from '../components/ProductCard';
+import { API_URL } from '../api.js';
 
 export default function Catalog({ onAdd }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
 
   useEffect(() => {
     async function loadProducts() {
       try {
-        setLoading(true);
-        setError('');
-
-        const response = await fetch('/api/products');
-
+        const response = await fetch(`${API_URL}/products`);
         if (!response.ok) {
-          throw new Error('Ошибка загрузки');
+          throw new Error(`Ошибка ${response.status}`);
         }
-
         const data = await response.json();
-
-        setProducts(
-          Array.isArray(data) ? data : data.products || []
-        );
-      } catch (err) {
+        setProducts(Array.isArray(data) ? data : data.items || data.products || []);
+      } catch {
         setError('Не удалось загрузить товары');
       } finally {
         setLoading(false);
@@ -39,7 +31,7 @@ export default function Catalog({ onAdd }) {
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <p role="alert" className="error">{error}</p>;
   }
 
   if (products.length === 0) {
@@ -49,14 +41,9 @@ export default function Catalog({ onAdd }) {
   return (
     <section>
       <h2>Каталог товаров</h2>
-
       <div className="products-grid">
         {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAdd={onAdd}
-          />
+          <ProductCard key={product.id} product={product} onAdd={onAdd} />
         ))}
       </div>
     </section>

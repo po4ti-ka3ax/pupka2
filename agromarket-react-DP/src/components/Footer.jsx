@@ -1,4 +1,4 @@
-function Footer({ cartCount = 0 }) {
+function Footer() {
   return (
     <footer className="site-footer">
       <div className="">

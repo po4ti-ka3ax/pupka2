@@ -1,6 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { http, HttpResponse, delay } from 'msw';
+import { server } from '../test/server';
+import { renderWithProviders } from '../test/utils';
 import Catalog from './Catalog';
+
+// В методичке страница называется CatalogPage, у нас — Catalog
+const CatalogPage = Catalog;
 
 const products = [
   { id: 1, name: 'Мёд гречишный', price: 3500, category: 'Мёд' },
@@ -26,6 +32,34 @@ function renderCatalog() {
 }
 
 describe('Catalog', () => {
+  test('показывает товары из API', async () => {
+    renderWithProviders(<CatalogPage />);
+    expect(await screen.findByText('Мёд гречишный')).toBeInTheDocument();
+    expect(screen.getByText('Картофель молодой')).toBeInTheDocument();
+  });
+
+  test('пока данные грузятся — индикатор загрузки', async () => {
+    server.use(http.get('*/api/products', async () => {
+      await delay(200);
+      return HttpResponse.json([]);
+    }));
+    renderWithProviders(<CatalogPage />);
+    expect(screen.getByText(/загрузка/i)).toBeInTheDocument();
+  });
+
+  test('пустой каталог — понятное сообщение', async () => {
+    server.use(http.get('*/api/products', () => HttpResponse.json([])));
+    renderWithProviders(<CatalogPage />);
+    expect(await screen.findByText(/товаров пока нет/i)).toBeInTheDocument();
+  });
+
+  test('сервер упал (500) — сообщение об ошибке, а не белый экран', async () => {
+    server.use(http.get('*/api/products', () =>
+      HttpResponse.json({ error: 'Internal' }, { status: 500 })));
+    renderWithProviders(<CatalogPage />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/не удалось загрузить/i);
+  });
+
   test('сначала показывает загрузку, потом товары', async () => {
     mockFetch(products);
     renderCatalog();

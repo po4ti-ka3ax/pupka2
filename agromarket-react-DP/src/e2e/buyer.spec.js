@@ -75,7 +75,7 @@ test('каталог загружается с сервера', async ({ page })
 
   await page.goto('/');
 
-  await expect(page).toHaveTitle(/Document/i);
+  await expect(page).toHaveTitle(/АгроМаркет/);
 
   const productsResponse = await productsResponsePromise;
 

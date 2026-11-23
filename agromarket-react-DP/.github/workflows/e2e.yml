@@ -1,4 +1,4 @@
-name: E2E (production)
+name: Smoke (production)
 
 on:
   workflow_dispatch:
@@ -16,9 +16,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
+      # только @smoke: полные E2E пишут в базу, на продакшене их запускать нельзя
+      - run: npx playwright test --grep @smoke
         env:
-          E2E_BASE_URL: ${{ vars.PRODUCTION_URL }}
+          BASE_URL: ${{ vars.PRODUCTION_URL }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

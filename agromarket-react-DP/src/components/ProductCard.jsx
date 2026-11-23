@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-export default function ProductCard({ product, onAdd, featured }) {
+export default function ProductCard({ product, onAdd, onDelete, featured }) {
   const isOutOfStock = product.stock === 0 || product.quantity === 0;
 
   return (
@@ -16,12 +16,17 @@ export default function ProductCard({ product, onAdd, featured }) {
       {product.category && <p className="category">{product.category}</p>}
       <p>{product.price} тг</p>
       {isOutOfStock && <p className="out-of-stock">Нет в наличии</p>}
-      <button 
-        onClick={() => onAdd && onAdd(product)} 
+      <button
+        onClick={() => onAdd && onAdd(product)}
         disabled={isOutOfStock}
       >
         В корзину
       </button>
+      {onDelete && (
+        <button type="button" className="danger" onClick={() => onDelete(product)}>
+          Удалить
+        </button>
+      )}
     </article>
   );
 }

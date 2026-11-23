@@ -1,21 +1,22 @@
 import { useContext, useState } from "react";
-import { apiFetch } from "../api.js";
+import { apiFetch, errorMessages } from "../api.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 
-export default function LoginForm({ onLogin }) {
-  // Внутри <AuthProvider> вход сохраняется в контекст; onLogin — для тестов/переопределения
+export default function LoginForm({ onLogin, initialMode = "login" }) {
+  // Внутри <AuthProvider> вход сохраняется в контекст; onLogin — чтобы переопределить
   const auth = useContext(AuthContext);
   const handleLogin = onLogin ?? auth?.login;
 
-  const [mode, setMode] = useState("login"); // 'login' или 'register'
-  const [error, setError] = useState("");
+  const [mode, setMode] = useState(initialMode); // 'login' или 'register'
+  const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
+    if (loading) return; // повторный клик во время запроса ничего не шлёт
+    setErrors([]);
     setLoading(true);
-    const data = Object.fromEntries(new FormData(e.target));
+    const data = Object.fromEntries(new FormData(e.currentTarget));
 
     try {
       // /auth/login или /auth/register — оба возвращают { user, token }
@@ -25,7 +26,9 @@ export default function LoginForm({ onLogin }) {
       });
       handleLogin?.(result.user, result.token);
     } catch (err) {
-      setError(err.message);
+      // 401 — «Неверный e-mail или пароль», 429 — «Слишком много попыток...»,
+      // 400 — список ошибок из details (ЛР11)
+      setErrors(errorMessages(err));
     } finally {
       setLoading(false);
     }
@@ -63,14 +66,23 @@ export default function LoginForm({ onLogin }) {
         minLength={8}
       />
 
-      {error && <p className="error">{error}</p>}
+      {errors.length > 0 && (
+        <div role="alert" className="error">
+          {errors.map((message) => (
+            <p key={message}>{message}</p>
+          ))}
+        </div>
+      )}
 
       <button type="submit" disabled={loading}>
         {loading ? "Подождите…" : isLogin ? "Войти" : "Зарегистрироваться"}
       </button>
       <button
         type="button"
-        onClick={() => setMode(isLogin ? "register" : "login")}
+        onClick={() => {
+          setErrors([]);
+          setMode(isLogin ? "register" : "login");
+        }}
       >
         {isLogin ? "Нет аккаунта? Регистрация" : "Уже есть аккаунт? Войти"}
       </button>
